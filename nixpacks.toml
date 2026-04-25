@@ -1,6 +1,9 @@
 # Nixpacks build configuration for Railway
 # WeasyPrint requires Cairo, Pango and GDK-PixBuf system libraries.
 
+[variables]
+DJANGO_SETTINGS_MODULE = "vetclinic.settings.prod"
+
 [phases.setup]
 nixPkgs = [
   "cairo",
