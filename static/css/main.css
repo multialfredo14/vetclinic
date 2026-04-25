@@ -1,0 +1,124 @@
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+body { font-size: .9rem; }
+
+.card {
+  border: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  border-radius: .5rem;
+}
+
+/* ── Sidebar — desktop (≥ 768 px) ────────────────────────────────────────── */
+.vc-sidebar {
+  width: 220px;
+  min-width: 220px;
+  min-height: calc(100vh - 56px);
+  flex-shrink: 0;
+}
+
+/* ── Sidebar — mobile (< 768 px) ─────────────────────────────────────────── */
+@media (max-width: 767.98px) {
+  .vc-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100dvh;       /* full screen height */
+    z-index: 1050;
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+    overflow-y: auto;
+    min-height: unset;
+  }
+
+  /* Sidebar open state — toggled by JS */
+  .vc-sidebar.open {
+    transform: translateX(0);
+  }
+}
+
+/* ── Overlay (tap-outside to close on mobile) ────────────────────────────── */
+.vc-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .45);
+  z-index: 1049;
+}
+.vc-overlay.visible { display: block; }
+
+/* ── Sidebar nav links ────────────────────────────────────────────────────── */
+.vc-nav { overflow-y: auto; }
+
+.vc-link {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  padding: .45rem .85rem;
+  margin: 1px .45rem;
+  border-radius: .375rem;
+  color: #adb5bd;
+  text-decoration: none;
+  font-size: .85rem;
+  transition: background .15s, color .15s;
+  white-space: nowrap;
+}
+
+.vc-link i { font-size: 1rem; flex-shrink: 0; }
+
+.vc-link:hover,
+.vc-link:focus { background: #2d3a55; color: #fff; outline: none; }
+
+.vc-link.active { background: #2d3a55; color: #fff; }
+
+.vc-section-label {
+  font-size: .62rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: #6c757d;
+  padding: .75rem .85rem .2rem;
+}
+
+/* ── Main content area ────────────────────────────────────────────────────── */
+.vc-main { overflow-x: hidden; }
+
+/* ── Tables ───────────────────────────────────────────────────────────────── */
+.table-responsive { -webkit-overflow-scrolling: touch; }
+
+@media (max-width: 575.98px) {
+  .table th, .table td { padding: .35rem .45rem; font-size: .78rem; }
+}
+
+/* ── Cards — tighter on mobile ────────────────────────────────────────────── */
+@media (max-width: 575.98px) {
+  .card-body   { padding: .75rem; }
+  .card-header { padding: .5rem .75rem; }
+}
+
+/* ── Fixed-width form cards: go full width on mobile ─────────────────────── */
+@media (max-width: 767.98px) {
+  .card[style*="max-width"] { max-width: 100% !important; }
+}
+
+/* ── Page headings ────────────────────────────────────────────────────────── */
+@media (max-width: 575.98px) {
+  h4.fw-bold { font-size: 1.05rem; }
+}
+
+/* ── Pagination wraps on small screens ────────────────────────────────────── */
+.pagination { flex-wrap: wrap; }
+
+/* ── Prescription formset ─────────────────────────────────────────────────── */
+#itemsTable th, #itemsTable td { vertical-align: middle; }
+
+/* ── FullCalendar responsive tweaks ──────────────────────────────────────── */
+.fc-toolbar-title { font-size: 1rem !important; font-weight: 700; }
+.fc-event { cursor: pointer; }
+
+@media (max-width: 767.98px) {
+  .fc .fc-toolbar        { flex-direction: column; gap: .4rem; }
+  .fc .fc-toolbar-title  { font-size: .88rem !important; }
+  .fc .fc-button         { padding: .2rem .45rem; font-size: .78rem; }
+}
+
+/* ── Auth layout ──────────────────────────────────────────────────────────── */
+.min-vh-100 { min-height: 100dvh; }

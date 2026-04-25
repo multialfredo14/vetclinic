@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Consultas — VetClinic{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="fw-bold mb-0"><i class="bi bi-clipboard2-pulse me-2"></i>Consultas</h4>
+  {% if user.can_edit_medical %}
+  <a href="{% url 'medical:consultation_create' %}" class="btn btn-primary btn-sm">
+    <i class="bi bi-plus-lg me-1"></i>Nueva consulta
+  </a>
+  {% endif %}
+</div>
+
+<div class="card mb-3">
+  <div class="card-body py-2">
+    <form class="row g-2" method="get">
+      <div class="col-sm-6">
+        <input type="text" name="q" class="form-control form-control-sm" placeholder="Paciente o diagnóstico…" value="{{ query }}">
+      </div>
+      <div class="col-sm-3">
+        <input type="date" name="date" class="form-control form-control-sm" value="{{ date_filter }}">
+      </div>
+      <div class="col-sm-3 d-flex gap-1">
+        <button type="submit" class="btn btn-outline-secondary btn-sm flex-fill">Filtrar</button>
+        <a href="{% url 'medical:consultation_list' %}" class="btn btn-outline-danger btn-sm">✕</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 small">
+      <thead class="table-light">
+        <tr><th>Fecha</th><th>Paciente</th><th>Diagnóstico</th><th>Veterinario</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for c in consultations %}
+        <tr>
+          <td class="text-nowrap">{{ c.date|date:"d/m/Y" }}</td>
+          <td><a href="{% url 'patients:patient_detail' c.patient.pk %}" class="fw-semibold text-decoration-none">{{ c.patient.name }}</a></td>
+          <td>{{ c.diagnosis|truncatechars:80 }}</td>
+          <td>{{ c.vet.get_full_name|default:c.vet.username }}</td>
+          <td><a href="{% url 'medical:consultation_detail' c.pk %}" class="btn btn-sm btn-outline-primary">Ver</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-center text-muted py-4">No se encontraron consultas.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if is_paginated %}
+<nav class="mt-3">
+  <ul class="pagination pagination-sm justify-content-center">
+    {% if page_obj.has_previous %}
+    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ query }}&date={{ date_filter }}">«</a></li>
+    {% endif %}
+    <li class="page-item active"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+    {% if page_obj.has_next %}
+    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ query }}&date={{ date_filter }}">»</a></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} — VetClinic{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4">
+  <a href="{% url 'medical:lab_list' %}" class="btn btn-outline-secondary me-3">
+    <i class="bi bi-arrow-left"></i>
+  </a>
+  <h4 class="fw-bold mb-0">{{ title }}</h4>
+</div>
+
+<div class="card" style="max-width:640px;">
+  <div class="card-body p-4">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">{% for e in form.non_field_errors %}{{ e }}{% endfor %}</div>
+      {% endif %}
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">{{ form.patient.label }} <span class="text-danger">*</span></label>
+          {{ form.patient }}
+          {% if form.patient.errors %}<div class="text-danger small">{{ form.patient.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">{{ form.ordered_by.label }} <span class="text-danger">*</span></label>
+          {{ form.ordered_by }}
+          {% if form.ordered_by.errors %}<div class="text-danger small">{{ form.ordered_by.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="col-md-8">
+          <label class="form-label fw-semibold">{{ form.test_name.label }} <span class="text-danger">*</span></label>
+          {{ form.test_name }}
+          {% if form.test_name.errors %}<div class="text-danger small">{{ form.test_name.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">{{ form.date.label }} <span class="text-danger">*</span></label>
+          {{ form.date }}
+          {% if form.date.errors %}<div class="text-danger small">{{ form.date.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold">{{ form.result.label }} <span class="text-danger">*</span></label>
+          {{ form.result }}
+          {% if form.result.errors %}<div class="text-danger small">{{ form.result.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold">{{ form.attachment.label }}</label>
+          {{ form.attachment }}
+          <div class="form-text">PDF, imagen u otro archivo de resultados (opcional).</div>
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold">{{ form.notes.label }}</label>
+          {{ form.notes }}
+        </div>
+      </div>
+
+      <div class="d-flex gap-2 mt-4">
+        <button type="submit" class="btn btn-primary px-4">Guardar</button>
+        <a href="{% url 'medical:lab_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

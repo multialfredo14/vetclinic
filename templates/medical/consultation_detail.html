@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% block title %}Consulta — {{ consultation.patient }} — VetClinic{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4 flex-wrap gap-2">
+  <a href="{% url 'medical:consultation_list' %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i>
+  </a>
+  <h4 class="fw-bold mb-0">Consulta — {{ consultation.patient.name }}</h4>
+  <span class="text-muted small ms-1">{{ consultation.date|date:"d/m/Y" }}</span>
+  <div class="ms-auto d-flex gap-2">
+    {% if user.is_admin_user or user.is_vet %}
+    <a href="{% url 'medical:consultation_edit' consultation.pk %}" class="btn btn-outline-primary btn-sm">
+      <i class="bi bi-pencil me-1"></i>Editar
+    </a>
+    <a href="{% url 'medical:prescription_create' %}?consultation={{ consultation.pk }}" class="btn btn-success btn-sm">
+      <i class="bi bi-file-medical me-1"></i>Nueva receta
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-4">
+  {# ── Left column ── #}
+  <div class="col-lg-5">
+    {# Vitals #}
+    <div class="card mb-3">
+      <div class="card-header fw-semibold"><i class="bi bi-heart-pulse me-1"></i>Signos vitales</div>
+      <div class="card-body">
+        <div class="row text-center g-3">
+          <div class="col-4">
+            <div class="fs-4 fw-bold text-primary">{{ consultation.weight|default:"—" }}</div>
+            <div class="text-muted small">kg</div>
+          </div>
+          <div class="col-4">
+            <div class="fs-4 fw-bold text-danger">{{ consultation.temperature|default:"—" }}</div>
+            <div class="text-muted small">°C</div>
+          </div>
+          <div class="col-4">
+            <div class="fs-4 fw-bold text-success">{{ consultation.heart_rate|default:"—" }}</div>
+            <div class="text-muted small">lpm</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# Info #}
+    <div class="card mb-3">
+      <div class="card-header fw-semibold">Datos generales</div>
+      <div class="card-body small">
+        <dl class="row mb-0">
+          <dt class="col-5">Paciente</dt>
+          <dd class="col-7"><a href="{% url 'patients:patient_detail' consultation.patient.pk %}">{{ consultation.patient }}</a></dd>
+          <dt class="col-5">Propietario</dt>
+          <dd class="col-7">{{ consultation.patient.owner }}</dd>
+          <dt class="col-5">Veterinario</dt>
+          <dd class="col-7">{{ consultation.vet.get_full_name|default:consultation.vet.username }}</dd>
+          {% if consultation.appointment %}
+          <dt class="col-5">Cita</dt>
+          <dd class="col-7">
+            <a href="{% url 'appointments:appointment_detail' consultation.appointment.pk %}">#{{ consultation.appointment.pk }}</a>
+          </dd>
+          {% endif %}
+        </dl>
+      </div>
+    </div>
+
+    {# Actions #}
+    <div class="card">
+      <div class="card-header fw-semibold">Acciones rápidas</div>
+      <div class="card-body d-grid gap-2">
+        <a href="{% url 'medical:vaccination_create' %}?patient={{ consultation.patient.pk }}" class="btn btn-outline-primary btn-sm">
+          <i class="bi bi-shield-plus me-1"></i>Registrar vacuna
+        </a>
+        <a href="{% url 'medical:lab_create' %}?patient={{ consultation.patient.pk }}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-eyedropper me-1"></i>Agregar resultado de lab
+        </a>
+        {% if user.is_admin_user or user.is_vet %}
+        <a href="{% url 'reports:vaccination_certificate' consultation.patient.pk %}" class="btn btn-outline-success btn-sm" target="_blank">
+          <i class="bi bi-file-earmark-medical me-1"></i>Certificado de vacunación (PDF)
+        </a>
+        <a href="{% url 'reports:patient_history' consultation.patient.pk %}" class="btn btn-outline-success btn-sm" target="_blank">
+          <i class="bi bi-file-earmark-text me-1"></i>Historia clínica (PDF)
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# ── Right column ── #}
+  <div class="col-lg-7">
+    <div class="card mb-3">
+      <div class="card-header fw-semibold">Anamnesis</div>
+      <div class="card-body small">{{ consultation.anamnesis|linebreaksbr }}</div>
+    </div>
+    <div class="card mb-3">
+      <div class="card-header fw-semibold">Exploración física</div>
+      <div class="card-body small">{{ consultation.physical_exam|linebreaksbr }}</div>
+    </div>
+    <div class="card mb-3">
+      <div class="card-header fw-semibold">Diagnóstico</div>
+      <div class="card-body small">{{ consultation.diagnosis|linebreaksbr }}</div>
+    </div>
+    <div class="card mb-3">
+      <div class="card-header fw-semibold">Plan de tratamiento</div>
+      <div class="card-body small">{{ consultation.treatment_plan|linebreaksbr }}</div>
+    </div>
+    {% if consultation.notes %}
+    <div class="card mb-3">
+      <div class="card-header fw-semibold">Notas adicionales</div>
+      <div class="card-body small">{{ consultation.notes|linebreaksbr }}</div>
+    </div>
+    {% endif %}
+
+    {# Prescriptions #}
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center fw-semibold">
+        <span><i class="bi bi-file-medical me-1"></i>Recetas</span>
+        {% if user.is_admin_user or user.is_vet %}
+        <a href="{% url 'medical:prescription_create' %}?consultation={{ consultation.pk }}" class="btn btn-sm btn-outline-success">+ Receta</a>
+        {% endif %}
+      </div>
+      {% if prescriptions %}
+      <div class="list-group list-group-flush">
+        {% for rx in prescriptions %}
+        <div class="list-group-item small py-2">
+          <div class="d-flex justify-content-between">
+            <span class="fw-semibold">Receta #{{ rx.pk }}</span>
+            <a href="{% url 'medical:prescription_detail' rx.pk %}" class="btn btn-xs btn-outline-primary btn-sm py-0">Ver</a>
+          </div>
+          <ul class="mb-0 ps-3 mt-1">
+            {% for item in rx.items.all %}
+            <li>{{ item.medication }} — {{ item.dose }} {{ item.frequency }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="card-body text-muted small">Sin recetas para esta consulta.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

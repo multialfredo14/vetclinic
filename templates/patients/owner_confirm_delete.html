@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Eliminar propietario — VetClinic{% endblock %}
+{% block content %}
+<div class="card" style="max-width:480px;">
+  <div class="card-body p-4 text-center">
+    <i class="bi bi-exclamation-triangle text-danger" style="font-size:2.5rem;"></i>
+    <h5 class="fw-bold mt-3">¿Eliminar propietario?</h5>
+    <p class="text-muted">Se eliminará <strong>{{ object.full_name }}</strong> y todas sus mascotas. Esta acción no se puede deshacer.</p>
+    <form method="post" class="d-flex gap-2 justify-content-center">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">Eliminar</button>
+      <a href="{% url 'patients:owner_detail' object.pk %}" class="btn btn-outline-secondary">Cancelar</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

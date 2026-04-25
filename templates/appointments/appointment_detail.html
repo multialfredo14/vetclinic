@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block title %}Cita #{{ appointment.pk }} — VetClinic{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4 flex-wrap gap-2">
+  <a href="{% url 'appointments:appointment_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+  <h4 class="fw-bold mb-0">Cita #{{ appointment.pk }}</h4>
+  <span class="badge fs-6
+    {% if appointment.status == 'completed' %}bg-success
+    {% elif appointment.status == 'cancelled' %}bg-danger
+    {% elif appointment.status == 'in_progress' %}bg-warning text-dark
+    {% elif appointment.status == 'confirmed' %}bg-primary
+    {% else %}bg-secondary{% endif %}">
+    {{ appointment.get_status_display }}
+  </span>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-5">
+    <div class="card mb-3">
+      <div class="card-header fw-semibold">Detalle de la cita</div>
+      <div class="card-body small">
+        <dl class="row mb-0">
+          <dt class="col-5">Paciente</dt>
+          <dd class="col-7"><a href="{% url 'patients:patient_detail' appointment.patient.pk %}">{{ appointment.patient }}</a></dd>
+          <dt class="col-5">Veterinario</dt>
+          <dd class="col-7">{{ appointment.vet.get_full_name|default:appointment.vet.username }}</dd>
+          <dt class="col-5">Tipo</dt>
+          <dd class="col-7"><span class="badge" style="background:{{ appointment.appointment_type.color }};">{{ appointment.appointment_type.label }}</span></dd>
+          <dt class="col-5">Fecha</dt>
+          <dd class="col-7">{{ appointment.scheduled_at|date:"d/m/Y H:i" }}</dd>
+          <dt class="col-5">Duración</dt>
+          <dd class="col-7">{{ appointment.duration }} min</dd>
+          <dt class="col-5">Motivo</dt>
+          <dd class="col-7">{{ appointment.reason|default:"—" }}</dd>
+          {% if appointment.notes %}
+          <dt class="col-5">Notas</dt>
+          <dd class="col-7">{{ appointment.notes }}</dd>
+          {% endif %}
+        </dl>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header fw-semibold">Acciones</div>
+      <div class="card-body d-grid gap-2">
+        {% if appointment.status not in 'completed,cancelled' %}
+          {% if user.is_admin_user or user.is_receptionist %}
+          <a href="{% url 'appointments:appointment_edit' appointment.pk %}" class="btn btn-outline-primary">
+            <i class="bi bi-pencil me-1"></i>Editar cita
+          </a>
+          <a href="{% url 'appointments:appointment_cancel' appointment.pk %}" class="btn btn-outline-danger">
+            <i class="bi bi-x-circle me-1"></i>Cancelar cita
+          </a>
+          {% endif %}
+        {% endif %}
+
+        {% if user.is_admin_user or user.is_vet %}
+          {% if appointment.status not in 'cancelled' %}
+          <form method="post" action="{% url 'appointments:appointment_status' appointment.pk %}">
+            {% csrf_token %}
+            <div class="input-group">
+              {{ status_form.status }}
+              <button type="submit" class="btn btn-outline-secondary">Actualizar estado</button>
+            </div>
+          </form>
+          {% if appointment.status == 'completed' or appointment.status == 'in_progress' %}
+          <a href="{% url 'medical:consultation_create' %}?appointment={{ appointment.pk }}" class="btn btn-success">
+            <i class="bi bi-clipboard2-plus me-1"></i>Registrar consulta
+          </a>
+          {% endif %}
+          {% endif %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-7">
+    {% if appointment.consultation %}
+    <div class="card">
+      <div class="card-header fw-semibold"><i class="bi bi-clipboard2-pulse me-1"></i>Consulta registrada</div>
+      <div class="card-body small">
+        <dl class="row mb-2">
+          <dt class="col-4">Diagnóstico</dt><dd class="col-8">{{ appointment.consultation.diagnosis }}</dd>
+          <dt class="col-4">Tratamiento</dt><dd class="col-8">{{ appointment.consultation.treatment_plan }}</dd>
+        </dl>
+        <a href="{% url 'medical:consultation_detail' appointment.consultation.pk %}" class="btn btn-sm btn-outline-primary">Ver consulta completa</a>
+      </div>
+    </div>
+    {% else %}
+      <div class="card border-dashed text-center p-4 text-muted">
+        <i class="bi bi-clipboard2 mb-2" style="font-size:2rem;"></i>
+        <p>No hay consulta registrada para esta cita.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

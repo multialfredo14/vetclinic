@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — VetClinic{% endblock %}
+
+{% block content %}
+<h4 class="fw-bold mb-4">
+  Bienvenido, {{ user.get_full_name|default:user.username }}
+  <small class="text-muted fs-6 fw-normal ms-2">{{ today|date:"l d \d\e F \d\e Y" }}</small>
+</h4>
+
+{# ── Staff / Clinic stats ──────────────────────────────────────────────────── #}
+{% if total_patients is not None %}
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-lg-3">
+    <div class="card border-start border-primary border-4 h-100">
+      <div class="card-body">
+        <div class="text-muted small mb-1">Pacientes activos</div>
+        <div class="fs-3 fw-bold text-primary">{{ total_patients }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="card border-start border-success border-4 h-100">
+      <div class="card-body">
+        <div class="text-muted small mb-1">Propietarios</div>
+        <div class="fs-3 fw-bold text-success">{{ total_owners }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="card border-start border-warning border-4 h-100">
+      <div class="card-body">
+        <div class="text-muted small mb-1">Citas pendientes</div>
+        <div class="fs-3 fw-bold text-warning">{{ pending_appointments }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="card border-start border-info border-4 h-100">
+      <div class="card-body">
+        <div class="text-muted small mb-1">Citas hoy</div>
+        <div class="fs-3 fw-bold text-info">{{ today_appointments|length }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# Today's appointments table #}
+<div class="card mb-4">
+  <div class="card-header fw-semibold">
+    <i class="bi bi-calendar-day me-1"></i>Agenda de hoy
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 small">
+      <thead class="table-light">
+        <tr>
+          <th>Hora</th><th>Paciente</th><th>Tipo</th><th>Veterinario</th><th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in today_appointments %}
+        <tr>
+          <td>{{ a.scheduled_at|time:"H:i" }}</td>
+          <td><a href="{% url 'patients:patient_detail' a.patient.pk %}">{{ a.patient }}</a></td>
+          <td>{{ a.appointment_type }}</td>
+          <td>{{ a.vet.get_full_name|default:a.vet.username }}</td>
+          <td><span class="badge bg-secondary">{{ a.get_status_display }}</span></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-center text-muted py-3">No hay citas programadas para hoy.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{# ── Low stock alert — Admin only ─────────────────────────────────────────── #}
+{% if low_stock_list %}
+<div class="card border-danger mb-4">
+  <div class="card-header bg-danger text-white fw-semibold">
+    <i class="bi bi-exclamation-triangle me-1"></i>Stock bajo
+  </div>
+  <div class="table-responsive">
+    <table class="table mb-0 small">
+      <thead class="table-light"><tr><th>Producto</th><th>Stock</th><th>Mínimo</th></tr></thead>
+      <tbody>
+        {% for p in low_stock_list %}
+        <tr class="table-danger">
+          <td>{{ p.name }}</td>
+          <td>{{ p.stock }} {{ p.unit }}</td>
+          <td>{{ p.min_stock }} {{ p.unit }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{# ── Client portal ────────────────────────────────────────────────────────── #}
+{% if user.is_client %}
+<div class="card">
+  <div class="card-header fw-semibold"><i class="bi bi-calendar-check me-1"></i>Mis próximas citas</div>
+  <div class="table-responsive">
+    <table class="table mb-0 small">
+      <thead class="table-light"><tr><th>Fecha</th><th>Mascota</th><th>Tipo</th><th>Estado</th></tr></thead>
+      <tbody>
+        {% for a in my_appointments %}
+        <tr>
+          <td>{{ a.scheduled_at|date:"d/m/Y H:i" }}</td>
+          <td>{{ a.patient }}</td>
+          <td>{{ a.appointment_type }}</td>
+          <td><span class="badge bg-secondary">{{ a.get_status_display }}</span></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="text-center text-muted py-3">No tienes citas próximas.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

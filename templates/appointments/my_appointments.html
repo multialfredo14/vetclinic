@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Mis citas — VetClinic{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="fw-bold mb-0"><i class="bi bi-calendar-check me-2"></i>Mis citas</h4>
+</div>
+
+{% if appointments %}
+<div class="row g-3">
+  {% for a in appointments %}
+  <div class="col-md-6 col-lg-4">
+    <div class="card h-100 {% if a.status == 'cancelled' %}border-danger opacity-75{% elif a.scheduled_at.date < today %}border-secondary opacity-75{% endif %}">
+      <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span class="fw-semibold small">{{ a.scheduled_at|date:"d/m/Y H:i" }}</span>
+        <span class="badge
+          {% if a.status == 'completed' %}bg-success
+          {% elif a.status == 'cancelled' %}bg-danger
+          {% elif a.status == 'in_progress' %}bg-warning text-dark
+          {% elif a.status == 'confirmed' %}bg-primary
+          {% else %}bg-secondary{% endif %}">
+          {{ a.get_status_display }}
+        </span>
+      </div>
+      <div class="card-body small">
+        <p class="mb-1">
+          <span class="badge" style="background:{{ a.appointment_type.color }};">{{ a.appointment_type.label }}</span>
+        </p>
+        <p class="mb-1"><strong>Mascota:</strong> {{ a.patient.name }}</p>
+        <p class="mb-1"><strong>Veterinario:</strong> {{ a.vet.get_full_name|default:a.vet.username }}</p>
+        {% if a.reason %}
+        <p class="mb-0 text-muted">{{ a.reason|truncatechars:80 }}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card text-center p-5">
+  <i class="bi bi-calendar-x text-muted" style="font-size:3rem;"></i>
+  <h5 class="mt-3 text-muted">No tienes citas registradas</h5>
+  <p class="text-muted">Cuando tengas citas programadas aparecerán aquí.</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} — VetClinic{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4">
+  <a href="{% url 'medical:consultation_list' %}" class="btn btn-outline-secondary me-3">
+    <i class="bi bi-arrow-left"></i>
+  </a>
+  <h4 class="fw-bold mb-0">{{ title }}</h4>
+</div>
+
+<form method="post" class="row g-4">
+  {% csrf_token %}
+
+  {% if form.non_field_errors %}
+    <div class="col-12">
+      <div class="alert alert-danger">{% for e in form.non_field_errors %}{{ e }}{% endfor %}</div>
+    </div>
+  {% endif %}
+
+  {# ── Patient / Meta ── #}
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header fw-semibold">Datos de la consulta</div>
+      <div class="card-body">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">{{ form.patient.label }} <span class="text-danger">*</span></label>
+          {{ form.patient }}
+          {% if form.patient.errors %}<div class="text-danger small">{{ form.patient.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">{{ form.vet.label }} <span class="text-danger">*</span></label>
+          {{ form.vet }}
+          {% if form.vet.errors %}<div class="text-danger small">{{ form.vet.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">{{ form.date.label }} <span class="text-danger">*</span></label>
+          {{ form.date }}
+          {% if form.date.errors %}<div class="text-danger small">{{ form.date.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="mb-0">
+          <label class="form-label fw-semibold">{{ form.appointment.label }}</label>
+          {{ form.appointment }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# ── Vitals ── #}
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header fw-semibold"><i class="bi bi-heart-pulse me-1"></i>Signos vitales</div>
+      <div class="card-body">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">{{ form.weight.label }}</label>
+          <div class="input-group">
+            {{ form.weight }}
+            <span class="input-group-text">kg</span>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">{{ form.temperature.label }}</label>
+          <div class="input-group">
+            {{ form.temperature }}
+            <span class="input-group-text">°C</span>
+          </div>
+        </div>
+        <div class="mb-0">
+          <label class="form-label fw-semibold">{{ form.heart_rate.label }}</label>
+          <div class="input-group">
+            {{ form.heart_rate }}
+            <span class="input-group-text">lpm</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# ── Clinical fields ── #}
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header fw-semibold">Historia clínica</div>
+      <div class="card-body row g-3">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">{{ form.anamnesis.label }} <span class="text-danger">*</span></label>
+          {{ form.anamnesis }}
+          {% if form.anamnesis.errors %}<div class="text-danger small">{{ form.anamnesis.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">{{ form.physical_exam.label }} <span class="text-danger">*</span></label>
+          {{ form.physical_exam }}
+          {% if form.physical_exam.errors %}<div class="text-danger small">{{ form.physical_exam.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">{{ form.diagnosis.label }} <span class="text-danger">*</span></label>
+          {{ form.diagnosis }}
+          {% if form.diagnosis.errors %}<div class="text-danger small">{{ form.diagnosis.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">{{ form.treatment_plan.label }} <span class="text-danger">*</span></label>
+          {{ form.treatment_plan }}
+          {% if form.treatment_plan.errors %}<div class="text-danger small">{{ form.treatment_plan.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold">{{ form.notes.label }}</label>
+          {{ form.notes }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <button type="submit" class="btn btn-primary px-5">Guardar consulta</button>
+    <a href="{% url 'medical:consultation_list' %}" class="btn btn-outline-secondary ms-2">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} — VetClinic{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4">
+  <a href="{% url 'patients:patient_list' %}" class="btn btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+  <h4 class="fw-bold mb-0">{{ title }}</h4>
+</div>
+
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  {% if form.non_field_errors %}
+    <div class="alert alert-danger">{% for e in form.non_field_errors %}{{ e }}{% endfor %}</div>
+  {% endif %}
+
+  <div class="row g-4">
+    {# Left column #}
+    <div class="col-lg-7">
+      <div class="card mb-3">
+        <div class="card-header fw-semibold">Identificación</div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">{{ form.name.label }} <span class="text-danger">*</span></label>
+              {{ form.name }}{% if form.name.errors %}<div class="text-danger small">{{ form.name.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">{{ form.owner.label }} <span class="text-danger">*</span></label>
+              {{ form.owner }}{% if form.owner.errors %}<div class="text-danger small">{{ form.owner.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">{{ form.species.label }} <span class="text-danger">*</span></label>
+              {{ form.species }}{% if form.species.errors %}<div class="text-danger small">{{ form.species.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">{{ form.breed.label }}</label>
+              {{ form.breed }}{% if form.breed.errors %}<div class="text-danger small">{{ form.breed.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">{{ form.sex.label }} <span class="text-danger">*</span></label>
+              {{ form.sex }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">{{ form.color.label }}</label>
+              {{ form.color }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">{{ form.microchip_id.label }}</label>
+              {{ form.microchip_id }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">{{ form.date_of_birth.label }}</label>
+              {{ form.date_of_birth }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">{{ form.weight.label }}</label>
+              {{ form.weight }}
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+              <div class="form-check mb-2">
+                {{ form.neutered }} <label class="form-check-label fw-semibold ms-1">{{ form.neutered.label }}</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-header fw-semibold">Datos clínicos</div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label fw-semibold">{{ form.allergies.label }}</label>
+              {{ form.allergies }}
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">{{ form.chronic_conditions.label }}</label>
+              {{ form.chronic_conditions }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# Right column #}
+    <div class="col-lg-5">
+      <div class="card mb-3">
+        <div class="card-header fw-semibold">Foto</div>
+        <div class="card-body text-center">
+          {% if form.instance.photo %}
+            <img src="{{ form.instance.photo.url }}" class="rounded mb-2" style="max-height:160px;">
+          {% endif %}
+          {{ form.photo }}
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-header fw-semibold">Genealogía</div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">{{ form.mother.label }}</label>
+            {{ form.mother }}
+          </div>
+          <div>
+            <label class="form-label fw-semibold">{{ form.father.label }}</label>
+            {{ form.father }}
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header fw-semibold">Estado</div>
+        <div class="card-body">
+          <div class="form-check mb-3">
+            {{ form.deceased }} <label class="form-check-label fw-semibold ms-1">{{ form.deceased.label }}</label>
+          </div>
+          <div id="dod_group" {% if not form.instance.deceased %}style="display:none;"{% endif %}>
+            <label class="form-label fw-semibold">{{ form.date_of_death.label }}</label>
+            {{ form.date_of_death }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex gap-2 mt-4">
+    <button type="submit" class="btn btn-primary px-4">Guardar</button>
+    <a href="{% url 'patients:patient_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Dynamic breed loading
+document.getElementById('id_species').addEventListener('change', function () {
+  const speciesId = this.value;
+  const breedSelect = document.getElementById('id_breed');
+  breedSelect.innerHTML = '<option value="">---------</option>';
+  if (!speciesId) return;
+  fetch(`/api/breeds/?species_id=${speciesId}`)
+    .then(r => r.json())
+    .then(data => {
+      data.breeds.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b.id; opt.textContent = b.name;
+        breedSelect.appendChild(opt);
+      });
+    });
+});
+
+// Toggle date of death
+document.getElementById('id_deceased').addEventListener('change', function () {
+  document.getElementById('dod_group').style.display = this.checked ? '' : 'none';
+});
+</script>
+{% endblock %}

@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% block title %}{{ patient.name }} — VetClinic{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4 flex-wrap gap-2">
+  <a href="{% url 'patients:patient_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+  {% if patient.photo %}
+    <img src="{{ patient.photo.url }}" class="rounded-circle" style="width:48px;height:48px;object-fit:cover;">
+  {% endif %}
+  <h4 class="fw-bold mb-0">{{ patient.name }}</h4>
+  {% if patient.deceased %}<span class="badge bg-secondary fs-6">Fallecido</span>{% endif %}
+  <div class="ms-auto d-flex gap-2">
+    {% if user.is_admin_user or user.is_vet or user.is_receptionist %}
+    <a href="{% url 'patients:patient_edit' patient.pk %}" class="btn btn-outline-primary btn-sm">
+      <i class="bi bi-pencil me-1"></i>Editar
+    </a>
+    {% endif %}
+    {% if user.is_admin_user or user.is_receptionist or user.is_assistant %}
+    <a href="{% url 'appointments:appointment_create' %}?patient={{ patient.pk }}" class="btn btn-success btn-sm">
+      <i class="bi bi-calendar-plus me-1"></i>Nueva cita
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-4">
+  {# ── Info card ── #}
+  <div class="col-md-4">
+    <div class="card mb-3">
+      <div class="card-header fw-semibold">Datos del paciente</div>
+      <div class="card-body small">
+        <dl class="row mb-0">
+          <dt class="col-5">Propietario</dt>
+          <dd class="col-7"><a href="{% url 'patients:owner_detail' patient.owner.pk %}">{{ patient.owner }}</a></dd>
+          <dt class="col-5">Especie</dt><dd class="col-7">{{ patient.species }}</dd>
+          <dt class="col-5">Raza</dt><dd class="col-7">{{ patient.breed|default:"—" }}</dd>
+          <dt class="col-5">Sexo</dt><dd class="col-7">{{ patient.get_sex_display }}</dd>
+          <dt class="col-5">Nacimiento</dt><dd class="col-7">{{ patient.date_of_birth|date:"d/m/Y"|default:"—" }}</dd>
+          <dt class="col-5">Peso</dt><dd class="col-7">{% if patient.weight %}{{ patient.weight }} kg{% else %}—{% endif %}</dd>
+          <dt class="col-5">Color</dt><dd class="col-7">{{ patient.color|default:"—" }}</dd>
+          <dt class="col-5">Microchip</dt><dd class="col-7">{{ patient.microchip_id|default:"—" }}</dd>
+          <dt class="col-5">Esterilizado</dt><dd class="col-7">{% if patient.neutered %}Sí{% else %}No{% endif %}</dd>
+        </dl>
+      </div>
+    </div>
+
+    {% if patient.allergies or patient.chronic_conditions %}
+    <div class="card mb-3 border-warning">
+      <div class="card-header fw-semibold text-warning"><i class="bi bi-exclamation-triangle me-1"></i>Alertas clínicas</div>
+      <div class="card-body small">
+        {% if patient.allergies %}<p class="mb-1"><strong>Alergias:</strong> {{ patient.allergies }}</p>{% endif %}
+        {% if patient.chronic_conditions %}<p class="mb-0"><strong>Crónicas:</strong> {{ patient.chronic_conditions }}</p>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    {# ── Lineage tree ── #}
+    <div class="card">
+      <div class="card-header fw-semibold"><i class="bi bi-diagram-3 me-1"></i>Genealogía</div>
+      <div class="card-body small">
+        <div class="d-flex flex-column gap-2">
+          <div>
+            <span class="text-muted">Madre:</span>
+            {% if patient.mother %}
+              <a href="{% url 'patients:patient_detail' patient.mother.pk %}">{{ patient.mother.name }}</a>
+            {% else %}<span class="text-muted">—</span>{% endif %}
+          </div>
+          <div>
+            <span class="text-muted">Padre:</span>
+            {% if patient.father %}
+              <a href="{% url 'patients:patient_detail' patient.father.pk %}">{{ patient.father.name }}</a>
+            {% else %}<span class="text-muted">—</span>{% endif %}
+          </div>
+          {% if offspring %}
+          <div>
+            <span class="text-muted">Crías:</span>
+            <ul class="mb-0 ps-3">
+              {% for child in offspring %}
+              <li><a href="{% url 'patients:patient_detail' child.pk %}">{{ child.name }}</a></li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# ── Medical history ── #}
+  <div class="col-md-8">
+    <div class="card mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-semibold"><i class="bi bi-clipboard2-pulse me-1"></i>Últimas consultas</span>
+        {% if user.can_edit_medical %}
+        <a href="{% url 'medical:consultation_create' %}?patient={{ patient.pk }}" class="btn btn-sm btn-outline-primary">+ Consulta</a>
+        {% endif %}
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 small">
+          <thead class="table-light"><tr><th>Fecha</th><th>Diagnóstico</th><th>Veterinario</th><th></th></tr></thead>
+          <tbody>
+            {% for c in recent_consultations %}
+            <tr>
+              <td>{{ c.date|date:"d/m/Y" }}</td>
+              <td>{{ c.diagnosis|truncatechars:60 }}</td>
+              <td>{{ c.vet.get_full_name|default:c.vet.username }}</td>
+              <td><a href="{% url 'medical:consultation_detail' c.pk %}" class="btn btn-sm btn-outline-secondary">Ver</a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-center text-muted py-2">Sin consultas registradas.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-semibold"><i class="bi bi-shield-plus me-1"></i>Vacunaciones recientes</span>
+        {% if user.can_view_medical %}
+        <a href="{% url 'medical:vaccination_create' %}?patient={{ patient.pk }}" class="btn btn-sm btn-outline-primary">+ Vacuna</a>
+        {% endif %}
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 small">
+          <thead class="table-light"><tr><th>Vacuna</th><th>Fecha</th><th>Próxima dosis</th><th>Aplicó</th></tr></thead>
+          <tbody>
+            {% for v in vaccinations %}
+            <tr>
+              <td>{{ v.vaccine.name }}</td>
+              <td>{{ v.application_date|date:"d/m/Y" }}</td>
+              <td>
+                {% if v.next_due_date %}
+                  <span class="{% if v.next_due_date < today %}text-danger fw-bold{% endif %}">
+                    {{ v.next_due_date|date:"d/m/Y" }}
+                  </span>
+                {% else %}—{% endif %}
+              </td>
+              <td>{{ v.applied_by.get_full_name|default:v.applied_by.username }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-center text-muted py-2">Sin vacunas registradas.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

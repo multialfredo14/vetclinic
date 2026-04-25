@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Receta #{{ prescription.pk }} — VetClinic{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4 flex-wrap gap-2">
+  <a href="{% url 'medical:prescription_list' %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i>
+  </a>
+  <h4 class="fw-bold mb-0">Receta #{{ prescription.pk }}</h4>
+  <div class="ms-auto d-flex gap-2">
+    {% if user.is_admin_user or user.is_vet %}
+    <a href="{% url 'reports:prescription_pdf' prescription.pk %}" class="btn btn-success btn-sm" target="_blank">
+      <i class="bi bi-printer me-1"></i>Imprimir PDF
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header fw-semibold">Información</div>
+      <div class="card-body small">
+        <dl class="row mb-0">
+          <dt class="col-5">Paciente</dt>
+          <dd class="col-7">
+            <a href="{% url 'patients:patient_detail' prescription.consultation.patient.pk %}">
+              {{ prescription.consultation.patient.name }}
+            </a>
+          </dd>
+          <dt class="col-5">Propietario</dt>
+          <dd class="col-7">{{ prescription.consultation.patient.owner }}</dd>
+          <dt class="col-5">Veterinario</dt>
+          <dd class="col-7">{{ prescription.issued_by.get_full_name|default:prescription.issued_by.username }}</dd>
+          <dt class="col-5">Fecha</dt>
+          <dd class="col-7">{{ prescription.issued_at|date:"d/m/Y" }}</dd>
+          <dt class="col-5">Consulta</dt>
+          <dd class="col-7">
+            <a href="{% url 'medical:consultation_detail' prescription.consultation.pk %}">#{{ prescription.consultation.pk }}</a>
+          </dd>
+        </dl>
+        {% if prescription.notes %}
+        <hr class="my-2">
+        <p class="mb-0 text-muted">{{ prescription.notes }}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header fw-semibold"><i class="bi bi-capsule me-1"></i>Medicamentos prescritos</div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 small">
+          <thead class="table-light">
+            <tr>
+              <th>Medicamento</th><th>Dosis</th><th>Frecuencia</th>
+              <th>Duración</th><th>Vía</th><th>Instrucciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+            <tr>
+              <td class="fw-semibold">{{ item.medication.name }}</td>
+              <td>{{ item.dose }}</td>
+              <td>{{ item.frequency }}</td>
+              <td>{{ item.duration }}</td>
+              <td>{{ item.get_route_display }}</td>
+              <td class="text-muted">{{ item.instructions|default:"—" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-center text-muted py-3">Sin ítems.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,198 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}VetClinic{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-light">
+
+{% if user.is_authenticated %}
+
+{# ── Top navbar ───────────────────────────────────────────────────────────── #}
+<nav class="navbar navbar-dark bg-dark px-3 py-2 sticky-top">
+  <button id="sidebarToggler" class="btn btn-sm btn-dark border-0 d-md-none me-2 p-1" aria-label="Menú">
+    <i class="bi bi-list fs-5"></i>
+  </button>
+
+  <a class="navbar-brand fw-bold me-auto" href="{% url 'dashboard' %}">
+    <i class="bi bi-hospital me-1"></i><span class="d-none d-sm-inline">VetClinic</span>
+  </a>
+
+  <div class="d-flex align-items-center gap-2">
+    <span class="text-light small d-none d-lg-inline">
+      {{ user.get_full_name|default:user.username }}
+    </span>
+    <span class="badge bg-secondary d-none d-sm-inline">{{ user.role_label }}</span>
+    <a href="{% url 'accounts:logout' %}" class="btn btn-sm btn-outline-danger">
+      <i class="bi bi-box-arrow-right"></i><span class="d-none d-md-inline ms-1">Salir</span>
+    </a>
+  </div>
+</nav>
+
+{# Mobile overlay (tap to close sidebar) #}
+<div id="sidebarOverlay" class="vc-overlay"></div>
+
+<div class="d-flex">
+
+  {# ── Sidebar ──────────────────────────────────────────────────────────────── #}
+  <aside id="vcSidebar" class="vc-sidebar bg-dark">
+
+    {# Close button — only visible on mobile inside the drawer #}
+    <div class="d-flex justify-content-between align-items-center px-3 py-2 d-md-none border-bottom border-secondary">
+      <span class="text-white fw-semibold small"><i class="bi bi-hospital me-1"></i>VetClinic</span>
+      <button id="sidebarClose" class="btn btn-sm btn-dark border-0 p-0" aria-label="Cerrar">
+        <i class="bi bi-x-lg text-secondary"></i>
+      </button>
+    </div>
+
+    <nav class="vc-nav pt-2 pb-4">
+
+      <a href="{% url 'dashboard' %}"
+         class="vc-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+        <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+      </a>
+
+      {% if user.is_admin_user or user.is_vet or user.is_receptionist %}
+      <a href="{% url 'patients:owner_list' %}"
+         class="vc-link {% if 'owner' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="bi bi-people"></i><span>Propietarios</span>
+      </a>
+      {% endif %}
+
+      {% if user.is_admin_user or user.can_view_medical or user.is_receptionist %}
+      <a href="{% url 'patients:patient_list' %}"
+         class="vc-link {% if 'patient' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="bi bi-heart-pulse"></i><span>Pacientes</span>
+      </a>
+      <a href="{% url 'appointments:appointment_list' %}"
+         class="vc-link {% if 'appointment' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="bi bi-calendar-check"></i><span>Citas</span>
+      </a>
+      {% endif %}
+
+      {% if user.can_view_medical %}
+      <div class="vc-section-label">Clínica</div>
+      <a href="{% url 'medical:consultation_list' %}"
+         class="vc-link {% if 'consultation' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="bi bi-clipboard2-pulse"></i><span>Consultas</span>
+      </a>
+      <a href="{% url 'medical:vaccination_list' %}"
+         class="vc-link {% if 'vaccination' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="bi bi-shield-plus"></i><span>Vacunaciones</span>
+      </a>
+      {% endif %}
+
+      {% if user.can_edit_medical %}
+      <a href="{% url 'medical:prescription_list' %}"
+         class="vc-link {% if 'prescription' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="bi bi-file-medical"></i><span>Recetas</span>
+      </a>
+      <a href="{% url 'medical:lab_list' %}"
+         class="vc-link {% if 'lab' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="bi bi-eyedropper"></i><span>Laboratorio</span>
+      </a>
+      {% endif %}
+
+      {% if user.is_admin_user %}
+      <div class="vc-section-label">Admin</div>
+      <a href="{% url 'inventory:product_list' %}"
+         class="vc-link {% if 'product' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="bi bi-boxes"></i><span>Inventario</span>
+      </a>
+      {% endif %}
+
+      {% if user.is_admin_user or user.is_vet %}
+      <a href="{% url 'reports:index' %}"
+         class="vc-link {% if 'report' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="bi bi-file-earmark-text"></i><span>Reportes</span>
+      </a>
+      {% endif %}
+
+      {% if user.is_client %}
+      <div class="vc-section-label">Portal</div>
+      <a href="{% url 'patients:my_patients' %}" class="vc-link">
+        <i class="bi bi-heart-pulse"></i><span>Mis mascotas</span>
+      </a>
+      <a href="{% url 'appointments:my_appointments' %}" class="vc-link">
+        <i class="bi bi-calendar-check"></i><span>Mis citas</span>
+      </a>
+      {% endif %}
+
+      {% if user.is_admin_user %}
+      <a href="/admin/" class="vc-link">
+        <i class="bi bi-gear"></i><span>Django Admin</span>
+      </a>
+      {% endif %}
+
+    </nav>
+  </aside>
+
+  {# ── Main content ─────────────────────────────────────────────────────────── #}
+  <main class="flex-grow-1 p-3 p-md-4 vc-main" style="min-width:0;">
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="alert alert-{{ msg.tags|default:'info' }} alert-dismissible fade show" role="alert">
+          {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+</div><!-- /.d-flex -->
+
+<script>
+(function () {
+  var toggler = document.getElementById('sidebarToggler');
+  var closer  = document.getElementById('sidebarClose');
+  var overlay = document.getElementById('sidebarOverlay');
+  var sidebar = document.getElementById('vcSidebar');
+
+  function openSidebar() {
+    sidebar.classList.add('open');
+    overlay.classList.add('visible');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('visible');
+    document.body.style.overflow = '';
+  }
+
+  if (toggler) toggler.addEventListener('click', openSidebar);
+  if (closer)  closer.addEventListener('click', closeSidebar);
+  if (overlay) overlay.addEventListener('click', closeSidebar);
+
+  // Close on resize if going to desktop
+  window.addEventListener('resize', function () {
+    if (window.innerWidth >= 768) closeSidebar();
+  });
+})();
+</script>
+
+{% else %}
+{# ── Auth layout ──────────────────────────────────────────────────────────── #}
+<div class="d-flex justify-content-center align-items-center min-vh-100 px-3">
+  <div class="w-100" style="max-width:420px;">
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="alert alert-{{ msg.tags|default:'info' }} alert-dismissible fade show">
+          {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+    {% block auth_content %}{% endblock %}
+  </div>
+</div>
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>
