@@ -7,6 +7,10 @@ echo "PORT: ${PORT:-NOT SET}"
 echo "DATABASE: ${DATABASE_URL:-SQLite /tmp/vetclinic.db}"
 
 echo ""
+echo "--- Static files ---"
+python manage.py collectstatic --noinput
+
+echo ""
 echo "--- Migrations ---"
 python manage.py migrate --noinput
 
@@ -18,14 +22,14 @@ python manage.py seed_demo
 echo ""
 echo "--- Auth check ---"
 python - <<'EOF'
-import django, os
+import django
 django.setup()
 from django.contrib.auth import authenticate
 ok = authenticate(username="dra.garcia", password="Vet1234!")
 if ok:
-    print("  Auth OK — dra.garcia puede iniciar sesion")
+    print("  Auth OK - dra.garcia puede iniciar sesion")
 else:
-    print("  ERROR: dra.garcia NO puede autenticarse — revisar seed_demo")
+    print("  ERROR: dra.garcia NO puede autenticarse")
     raise SystemExit(1)
 EOF
 

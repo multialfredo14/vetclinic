@@ -1,1 +1,1 @@
-web: DJANGO_SETTINGS_MODULE=vetclinic.settings.prod python manage.py migrate --noinput && DJANGO_SETTINGS_MODULE=vetclinic.settings.prod gunicorn vetclinic.wsgi --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+web: bash startup.sh
