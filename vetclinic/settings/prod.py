@@ -36,11 +36,14 @@ MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # ── Seguridad HTTPS ──────────────────────────────────────────────────────────
-SECURE_HSTS_SECONDS = 31536000
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+# Railway termina SSL en su proxy y reenvía a Gunicorn como HTTP con este header.
+# Sin esto Django entra en loop infinito de redirecciones HTTP→HTTPS.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
 # ── Email (hereda configuración de base.py, solo se redefine FROM) ───────────
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="noreply@vetclinic.com")
