@@ -74,10 +74,11 @@ class Command(BaseCommand):
         for data in USERS:
             group_name = data.pop("group")
             password   = data.pop("password")
-            u, created = User.objects.get_or_create(username=data["username"], defaults=data)
-            if created:
-                u.set_password(password)
-                u.save()
+            u, created = User.objects.update_or_create(
+                username=data["username"], defaults=data
+            )
+            u.set_password(password)
+            u.save()
             group = Group.objects.get(name=group_name)
             u.groups.set([group])
             self.users[u.username] = u
