@@ -7,8 +7,10 @@ env = environ.Env()
 DEBUG = False
 
 # ── Database (Railway inyecta DATABASE_URL automáticamente) ──────────────────
+# El default SQLite solo se usa durante el build (collectstatic no necesita DB).
+# En runtime Railway inyecta el DATABASE_URL real del servicio PostgreSQL.
 DATABASES = {
-    "default": env.db("DATABASE_URL")
+    "default": env.db("DATABASE_URL", default="sqlite:////tmp/vetclinic_build.db")
 }
 
 # ── Hosts ────────────────────────────────────────────────────────────────────

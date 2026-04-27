@@ -3,10 +3,10 @@
 
 [variables]
 DJANGO_SETTINGS_MODULE = "vetclinic.settings.prod"
-# Placeholders usados solo en build — Railway sobreescribe estos valores
-# en runtime con las Variables configuradas en el servicio.
+# SECRET_KEY placeholder — Railway lo sobreescribe en runtime con el valor real
 SECRET_KEY = "django-build-placeholder-change-in-railway-variables"
-DATABASE_URL = "sqlite:////tmp/vetclinic_build.db"
+# DATABASE_URL lo inyecta Railway automáticamente desde el servicio PostgreSQL.
+# No se define aquí para que Railway tenga control total del valor.
 
 [phases.setup]
 nixPkgs = [
