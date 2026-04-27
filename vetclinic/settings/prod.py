@@ -17,19 +17,17 @@ DATABASES = {
 # Railway inyecta RAILWAY_PUBLIC_DOMAIN con el dominio asignado al servicio.
 # También se puede sobreescribir vía variable ALLOWED_HOSTS.
 _railway_domain = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "")
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost"])
-if _railway_domain and _railway_domain not in ALLOWED_HOSTS:
-    ALLOWED_HOSTS.append(_railway_domain)
 
-# CSRF: Django 4.x exige origen explícito para HTTPS
+# Para demo: acepta cualquier host. En producción real reemplazar con el dominio exacto.
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
+
+# CSRF: incluye el dominio Railway y cualquier dominio definido en ALLOWED_HOSTS
 CSRF_TRUSTED_ORIGINS = []
-for _h in ALLOWED_HOSTS:
-    if not _h.startswith(("localhost", "127.")):
-        CSRF_TRUSTED_ORIGINS.append(f"https://{_h}")
 if _railway_domain:
-    _origin = f"https://{_railway_domain}"
-    if _origin not in CSRF_TRUSTED_ORIGINS:
-        CSRF_TRUSTED_ORIGINS.append(_origin)
+    CSRF_TRUSTED_ORIGINS.append(f"https://{_railway_domain}")
+for _h in env.list("ALLOWED_HOSTS", default=[]):
+    if _h not in ("*",) and not _h.startswith(("localhost", "127.")):
+        CSRF_TRUSTED_ORIGINS.append(f"https://{_h}")
 
 # ── Archivos estáticos — WhiteNoise ──────────────────────────────────────────
 MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
