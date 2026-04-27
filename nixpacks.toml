@@ -3,10 +3,8 @@
 
 [variables]
 DJANGO_SETTINGS_MODULE = "vetclinic.settings.prod"
-# SECRET_KEY placeholder — Railway lo sobreescribe en runtime con el valor real
+# SECRET_KEY placeholder — Railway lo sobreescribe con el valor real en runtime.
 SECRET_KEY = "django-build-placeholder-change-in-railway-variables"
-# DATABASE_URL lo inyecta Railway automáticamente desde el servicio PostgreSQL.
-# No se define aquí para que Railway tenga control total del valor.
 
 [phases.setup]
 nixPkgs = [
@@ -21,7 +19,10 @@ nixPkgs = [
 cmds = ["pip install -r requirements.txt"]
 
 [phases.build]
-cmds = ["python manage.py collectstatic --noinput"]
+cmds = [
+  "chmod +x startup.sh",
+  "python manage.py collectstatic --noinput",
+]
 
 [start]
-cmd = "python manage.py migrate --noinput && gunicorn vetclinic.wsgi --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
+cmd = "bash startup.sh"
