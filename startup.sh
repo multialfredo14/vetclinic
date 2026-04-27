@@ -4,7 +4,7 @@ set -e
 echo "=== VetClinic startup ==="
 echo "DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE:-NOT SET}"
 echo "PORT: ${PORT:-NOT SET}"
-echo "DATABASE_URL set: $([ -n "$DATABASE_URL" ] && echo YES || echo 'NO — check Railway variables')"
+echo "DATABASE_URL: ${DATABASE_URL:-NO CONFIGURADO — usando SQLite fallback}"
 echo "SECRET_KEY set:   $([ -n "$SECRET_KEY" ] && echo YES || echo 'NO — check Railway variables')"
 
 echo ""
