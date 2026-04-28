@@ -7,10 +7,13 @@ env = environ.Env()
 DEBUG = False
 
 # ── Database ─────────────────────────────────────────────────────────────────
-# SQLite en /tmp persiste mientras el contenedor esté corriendo.
-# Si DATABASE_URL está configurado (PostgreSQL) se usa en su lugar.
+# SQLite persists for the lifetime of the Railway container and is re-seeded
+# on every startup, so no external database service is needed.
 DATABASES = {
-    "default": env.db("DATABASE_URL", default="sqlite:////tmp/vetclinic.db")
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": "/tmp/vetclinic.db",
+    }
 }
 
 # ── Hosts ─────────────────────────────────────────────────────────────────────
