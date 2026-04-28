@@ -70,6 +70,16 @@ class Command(BaseCommand):
             dict(username="cliente.mtz",   password="Cliente1234!",    first_name="Juan",         last_name="Martínez Soto",     email="juan.martinez@gmail.com",phone="5559871001", group="Propietario"),
         ]
 
+        # Superuser
+        admin, _ = User.objects.get_or_create(username="admin")
+        admin.set_password("Admin1234!")
+        admin.is_staff = True
+        admin.is_superuser = True
+        admin.first_name = "Admin"
+        admin.last_name = "Sistema"
+        admin.email = "admin@vetclinic.mx"
+        admin.save()
+
         self.users = {}
         for data in USERS:
             group_name = data.pop("group")
