@@ -4,7 +4,17 @@ set -e
 echo "=== VetClinic startup ==="
 echo "DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE:-NOT SET}"
 echo "PORT: ${PORT:-NOT SET}"
-echo "DATABASE: ${DATABASE_URL:-SQLite /tmp/vetclinic.db}"
+
+if [ -n "${DATABASE_URL}" ]; then
+  # Show only the scheme+host portion so credentials stay out of logs
+  echo "DATABASE_URL: ${DATABASE_URL%%\?*}" | sed 's|//[^@]*@|//<credentials>@|'
+  if [[ "${DATABASE_URL}" != postgres* ]]; then
+    echo "WARNING: DATABASE_URL does not look like PostgreSQL — clearing it to use SQLite fallback"
+    unset DATABASE_URL
+  fi
+else
+  echo "DATABASE_URL: not set — using SQLite /tmp/vetclinic.db"
+fi
 
 echo ""
 echo "--- Static files ---"
