@@ -2,6 +2,7 @@ from django.contrib import admin
 from simple_history.admin import SimpleHistoryAdmin
 from .models import (
     Consultation, Vaccine, VaccinationRecord,
+    Dewormer, DewormingRecord,
     Medication, Prescription, PrescriptionItem, LabResult, VitalsHistory,
 )
 
@@ -41,6 +42,21 @@ class VaccinationRecordAdmin(SimpleHistoryAdmin):
     search_fields = ("patient__name", "vaccine__name", "lot")
     autocomplete_fields = ("patient", "vaccine", "applied_by")
     date_hierarchy = "application_date"
+
+
+@admin.register(Dewormer)
+class DewormerAdmin(admin.ModelAdmin):
+    list_display = ("name", "manufacturer", "type")
+    search_fields = ("name", "manufacturer")
+
+
+@admin.register(DewormingRecord)
+class DewormingRecordAdmin(SimpleHistoryAdmin):
+    list_display = ("patient", "dewormer", "date", "weight", "lot", "next_due_date", "applied_by")
+    list_filter = ("dewormer", "date")
+    search_fields = ("patient__name", "dewormer__name", "lot")
+    autocomplete_fields = ("patient", "dewormer", "applied_by")
+    date_hierarchy = "date"
 
 
 @admin.register(Medication)

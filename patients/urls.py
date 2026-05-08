@@ -20,6 +20,7 @@ urlpatterns = [
 
     # AJAX
     path("api/breeds/", views.breeds_by_species, name="breeds_by_species"),
+    path("api/patients/<int:pk>/", views.patient_json, name="patient_json"),
 
     # Client portal
     path("my-patients/", views.my_patients, name="my_patients"),

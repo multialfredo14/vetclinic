@@ -13,6 +13,14 @@ urlpatterns = [
     # Vaccinations
     path("vaccinations/", views.VaccinationListView.as_view(), name="vaccination_list"),
     path("vaccinations/new/", views.VaccinationCreateView.as_view(), name="vaccination_create"),
+    path("vaccinations/<int:pk>/edit/", views.VaccinationUpdateView.as_view(), name="vaccination_edit"),
+    path("vaccinations/<int:pk>/delete/", views.VaccinationDeleteView.as_view(), name="vaccination_delete"),
+
+    # Deworming
+    path("deworming/", views.DewormingListView.as_view(), name="deworming_list"),
+    path("deworming/new/", views.DewormingCreateView.as_view(), name="deworming_create"),
+    path("deworming/<int:pk>/edit/", views.DewormingUpdateView.as_view(), name="deworming_edit"),
+    path("deworming/<int:pk>/delete/", views.DewormingDeleteView.as_view(), name="deworming_delete"),
 
     # Prescriptions
     path("prescriptions/", views.PrescriptionListView.as_view(), name="prescription_list"),

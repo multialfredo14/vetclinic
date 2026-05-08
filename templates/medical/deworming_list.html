@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Desparasitaciones — Duran{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <h4 class="fw-bold mb-0">Desparasitaciones</h4>
+  <a href="{% url 'medical:deworming_create' %}" class="btn btn-primary btn-sm">
+    <i class="bi bi-plus-lg"></i> Registrar
+  </a>
+</div>
+
+<form class="d-flex gap-2 mb-3" method="get">
+  <input type="search" name="q" value="{{ query }}" class="form-control form-control-sm" placeholder="Buscar paciente o desparasitante…" style="max-width:300px;">
+  <button class="btn btn-outline-secondary btn-sm">Buscar</button>
+  {% if query %}<a href="{% url 'medical:deworming_list' %}" class="btn btn-outline-secondary btn-sm">Limpiar</a>{% endif %}
+</form>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0" style="font-size:13px;">
+      <thead class="table-dark">
+        <tr>
+          <th>Paciente</th>
+          <th>Desparasitante</th>
+          <th>Fecha</th>
+          <th>Peso</th>
+          <th>Lote</th>
+          <th>Próx. dosis</th>
+          <th>Aplicado por</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for dew in dewormings %}
+        <tr>
+          <td class="fw-semibold">{{ dew.patient }}</td>
+          <td>{{ dew.dewormer }}</td>
+          <td>{{ dew.date|date:"d/m/Y" }}</td>
+          <td>{% if dew.weight %}{{ dew.weight }} kg{% else %}—{% endif %}</td>
+          <td>{{ dew.lot|default:"—" }}</td>
+          <td>
+            {% if dew.next_due_date %}
+              {% if dew.next_due_date < today %}
+                <span class="badge bg-danger">{{ dew.next_due_date|date:"d/m/Y" }}</span>
+              {% else %}
+                {{ dew.next_due_date|date:"d/m/Y" }}
+              {% endif %}
+            {% else %}—{% endif %}
+          </td>
+          <td>{{ dew.applied_by.get_full_name|default:dew.applied_by.username }}</td>
+          <td class="text-end">
+            <a href="{% url 'medical:deworming_edit' dew.pk %}" class="btn btn-outline-secondary btn-xs py-0 px-2" style="font-size:11px;"><i class="bi bi-pencil"></i></a>
+            <a href="{% url 'medical:deworming_delete' dew.pk %}" class="btn btn-outline-danger btn-xs py-0 px-2 ms-1" style="font-size:11px;"><i class="bi bi-trash"></i></a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" class="text-center text-muted py-4">No hay registros de desparasitación.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if is_paginated %}
+<nav class="mt-3">
+  <ul class="pagination pagination-sm justify-content-center">
+    {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">‹</a></li>{% endif %}
+    <li class="page-item disabled"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+    {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}">›</a></li>{% endif %}
+  </ul>
+</nav>
+{% endif %}
+{% endblock %}

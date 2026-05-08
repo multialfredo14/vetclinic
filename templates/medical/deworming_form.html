@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="mb-3">
-  <a href="{% url 'medical:vaccination_list' %}" class="btn btn-outline-secondary btn-sm">
+  <a href="{% url 'medical:deworming_list' %}" class="btn btn-outline-secondary btn-sm">
     <i class="bi bi-arrow-left"></i> Regresar
   </a>
 </div>
@@ -15,7 +15,6 @@
   .hc-section-label { background: #182e3d; color: #fff; font-weight: 700; font-size: 11px; padding: 4px 10px; letter-spacing: .5px; }
   .hc-field-label { color: #666; font-size: 10px; line-height: 1.2; display: block; }
   .hc-field-val { font-size: 13px; font-weight: 500; display: block; border-bottom: 1px solid #bbb; min-height: 18px; }
-  .hc-vac-badge { background: #1a6b52; color: #fff; font-weight: 700; font-size: 13px; padding: 4px 16px; display: inline-block; }
   .hc-dew-badge { background: #2e6b3e; color: #fff; font-weight: 700; font-size: 13px; padding: 4px 16px; display: inline-block; }
   .hc-table { width: 100%; border-collapse: collapse; }
   .hc-table th { background: #182e3d; color: #fff; font-size: 11px; font-weight: 700; padding: 5px 7px; border: 1px solid #3a5060; text-align: center; }
@@ -25,12 +24,10 @@
   .hc-inline .form-control, .hc-inline .form-select { border: none; border-bottom: 1px solid #aaa; border-radius: 0; padding: 2px 4px; font-size: 12px; background: transparent; box-shadow: none; }
   .hc-inline .form-control:focus, .hc-inline .form-select:focus { border-bottom-color: #182e3d; }
   .hc-divider { border-right: 1px solid #bbb; }
-  .hc-optional-note { font-size: 10px; color: #888; font-style: italic; }
 </style>
 
 <form method="post">
 {% csrf_token %}
-
 {% if form.non_field_errors %}
   <div class="alert alert-danger mb-2">{% for e in form.non_field_errors %}{{ e }}{% endfor %}</div>
 {% endif %}
@@ -70,35 +67,18 @@
     <div class="hc-divider" style="flex:1;">
       <div class="hc-section-label">PROPIETARIO | RESPONSABLE</div>
       <div class="px-2 py-2 hc-inline">
-        <div class="mb-2">
-          <span class="hc-field-label">Nombre completo :</span>
-          <span class="hc-field-val" id="ow-name">{% if selected_patient %}{{ selected_patient.owner.full_name }}{% endif %}</span>
-        </div>
-        <div class="mb-2">
-          <span class="hc-field-label">Número de teléfono :</span>
-          <span class="hc-field-val" id="ow-phone">{% if selected_patient %}{{ selected_patient.owner.phone }}{% endif %}</span>
-        </div>
-        <div class="mb-2">
-          <span class="hc-field-label">Dirección :</span>
-          <span class="hc-field-val" id="ow-addr">{% if selected_patient %}{{ selected_patient.owner.address }}{% endif %}</span>
-        </div>
-        <div>
-          <span class="hc-field-label">Email :</span>
-          <span class="hc-field-val" id="ow-email">{% if selected_patient %}{{ selected_patient.owner.email }}{% endif %}</span>
-        </div>
+        <div class="mb-2"><span class="hc-field-label">Nombre completo :</span><span class="hc-field-val" id="ow-name">{% if selected_patient %}{{ selected_patient.owner.full_name }}{% endif %}</span></div>
+        <div class="mb-2"><span class="hc-field-label">Número de teléfono :</span><span class="hc-field-val" id="ow-phone">{% if selected_patient %}{{ selected_patient.owner.phone }}{% endif %}</span></div>
+        <div class="mb-2"><span class="hc-field-label">Dirección :</span><span class="hc-field-val" id="ow-addr">{% if selected_patient %}{{ selected_patient.owner.address }}{% endif %}</span></div>
+        <div><span class="hc-field-label">Email :</span><span class="hc-field-val" id="ow-email">{% if selected_patient %}{{ selected_patient.owner.email }}{% endif %}</span></div>
       </div>
     </div>
-
     <div style="flex:1;">
       <div class="hc-section-label">EJEMPLAR | MASCOTA</div>
       <div class="px-2 py-2 hc-inline">
         <div class="mb-2">
           <span class="hc-field-label">Nombre : <span class="text-danger">*</span></span>
-          {% if is_update %}
-            {{ form.patient }}
-          {% else %}
-            {{ form.patient }}
-          {% endif %}
+          {{ form.patient }}
           {% if form.patient.errors %}<div class="text-danger" style="font-size:11px;">{{ form.patient.errors.0 }}</div>{% endif %}
         </div>
         <div class="row g-1">
@@ -114,59 +94,11 @@
     </div>
   </div>
 
-  <!-- ── Vacunación ── -->
-  <div class="px-2 pt-3 pb-2" style="border-bottom:1px solid #bbb;">
-    <div class="d-flex align-items-center mb-2">
-      <span class="hc-vac-badge">Vacunación</span>
-      <div style="flex:1; border-bottom:1px solid #aaa; margin-left:8px;"></div>
-    </div>
-    <table class="hc-table">
-      <thead>
-        <tr>
-          <th style="width:130px;">Fecha</th>
-          <th>Biológico</th>
-          <th style="width:100px;">Lote</th>
-          <th style="width:130px;">Revacunación</th>
-          <th style="width:150px;">Firma MVZ</th>
-          <th style="width:100px;">Caducidad lote</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>
-            {{ form.application_date }}
-            {% if form.application_date.errors %}<div class="text-danger" style="font-size:11px;">{{ form.application_date.errors.0 }}</div>{% endif %}
-          </td>
-          <td>
-            {{ form.vaccine }}
-            {% if form.vaccine.errors %}<div class="text-danger" style="font-size:11px;">{{ form.vaccine.errors.0 }}</div>{% endif %}
-          </td>
-          <td>{{ form.lot }}</td>
-          <td>{{ form.next_due_date }}</td>
-          <td>
-            {{ form.applied_by }}
-            {% if form.applied_by.errors %}<div class="text-danger" style="font-size:11px;">{{ form.applied_by.errors.0 }}</div>{% endif %}
-          </td>
-          <td>{{ form.expiration }}</td>
-        </tr>
-        {% if not is_update %}
-          {% for _ in "12345678" %}<tr><td style="height:22px;"></td><td></td><td></td><td></td><td></td><td></td></tr>{% endfor %}
-        {% endif %}
-      </tbody>
-    </table>
-    <div class="mt-2 hc-inline d-flex align-items-center gap-2">
-      <span class="hc-field-label" style="white-space:nowrap;">Sitio de aplicación :</span>
-      {{ form.application_site }}
-    </div>
-  </div>
-
-  <!-- ── Desparasitación (solo en crear) ── -->
-  {% if not is_update %}
+  <!-- ── Desparasitación ── -->
   <div class="px-2 pt-3 pb-2">
-    <div class="d-flex align-items-center mb-1">
+    <div class="d-flex align-items-center mb-2">
       <span class="hc-dew-badge">Desparasitación</span>
       <div style="flex:1; border-bottom:1px solid #aaa; margin-left:8px;"></div>
-      <span class="hc-optional-note ms-2">opcional — solo si aplica en esta visita</span>
     </div>
     <table class="hc-table">
       <thead>
@@ -181,29 +113,39 @@
       </thead>
       <tbody>
         <tr>
-          <td>{{ dew_form.date }}</td>
-          <td>{{ dew_form.weight }}</td>
-          <td>{{ dew_form.dewormer }}</td>
-          <td>{{ dew_form.lot }}</td>
-          <td>{{ dew_form.next_due_date }}</td>
-          <td>{{ dew_form.applied_by }}</td>
+          <td>
+            {{ form.date }}
+            {% if form.date.errors %}<div class="text-danger" style="font-size:11px;">{{ form.date.errors.0 }}</div>{% endif %}
+          </td>
+          <td>{{ form.weight }}</td>
+          <td>
+            {{ form.dewormer }}
+            {% if form.dewormer.errors %}<div class="text-danger" style="font-size:11px;">{{ form.dewormer.errors.0 }}</div>{% endif %}
+          </td>
+          <td>{{ form.lot }}</td>
+          <td>{{ form.next_due_date }}</td>
+          <td>
+            {{ form.applied_by }}
+            {% if form.applied_by.errors %}<div class="text-danger" style="font-size:11px;">{{ form.applied_by.errors.0 }}</div>{% endif %}
+          </td>
         </tr>
-        {% for _ in "12345678" %}<tr><td style="height:22px;"></td><td></td><td></td><td></td><td></td><td></td></tr>{% endfor %}
+        {% if not is_update %}
+          {% for _ in "12345678" %}<tr><td style="height:22px;"></td><td></td><td></td><td></td><td></td><td></td></tr>{% endfor %}
+        {% endif %}
       </tbody>
     </table>
   </div>
-  {% endif %}
 
   <!-- ── Botones ── -->
   <div class="d-flex gap-2 px-3 pb-3 pt-2" style="border-top:1px solid #ddd;">
     <button type="submit" class="btn btn-primary btn-sm px-4">
       {% if is_update %}Guardar cambios{% else %}Guardar{% endif %}
     </button>
-    <a href="{% url 'medical:vaccination_list' %}" class="btn btn-outline-secondary btn-sm">Cancelar</a>
+    <a href="{% url 'medical:deworming_list' %}" class="btn btn-outline-secondary btn-sm">Cancelar</a>
     {% if is_update %}
-      <a href="{% url 'medical:vaccination_delete' object.pk %}"
+      <a href="{% url 'medical:deworming_delete' object.pk %}"
          class="btn btn-outline-danger btn-sm ms-auto"
-         onclick="return confirm('¿Eliminar esta vacunación?')">
+         onclick="return confirm('¿Eliminar este registro de desparasitación?')">
         <i class="bi bi-trash"></i> Eliminar
       </a>
     {% endif %}

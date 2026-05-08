@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Eliminar vacunación — Duran{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+  <a href="{% url 'medical:vaccination_list' %}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left"></i> Regresar
+  </a>
+</div>
+
+<style>
+  .hc-wrap { max-width: 600px; border: 2px solid #182e3d; border-radius: 5px; overflow: hidden; font-size: 13px; }
+  .hc-header { background: #182e3d; color: #fff; }
+  .hc-field-label { color: #666; font-size: 10px; line-height: 1.2; display: block; }
+  .hc-field-val { font-size: 13px; font-weight: 500; display: block; border-bottom: 1px solid #ddd; min-height: 18px; padding-bottom: 2px; }
+  .hc-vac-badge { background: #1a6b52; color: #fff; font-weight: 700; font-size: 13px; padding: 4px 16px; display: inline-block; }
+</style>
+
+<div class="hc-wrap">
+  <!-- Header -->
+  <div class="hc-header d-flex align-items-center px-3 py-2 gap-3">
+    <img src="{% static 'img/logo.png' %}" height="40" alt="Duran">
+    <h2 class="m-0 fw-black text-white" style="font-size:16px; letter-spacing:1px;">REGISTRO HISTÓRICO DE SALUD</h2>
+  </div>
+
+  <!-- Detalle del registro -->
+  <div class="px-3 pt-3 pb-2" style="border-bottom:1px solid #ddd;">
+    <div class="d-flex align-items-center mb-2">
+      <span class="hc-vac-badge">Vacunación</span>
+    </div>
+    <div class="row g-2 mt-1">
+      <div class="col-6">
+        <span class="hc-field-label">Paciente :</span>
+        <span class="hc-field-val">{{ object.patient }}</span>
+      </div>
+      <div class="col-6">
+        <span class="hc-field-label">Biológico :</span>
+        <span class="hc-field-val">{{ object.vaccine }}</span>
+      </div>
+      <div class="col-4">
+        <span class="hc-field-label">Fecha :</span>
+        <span class="hc-field-val">{{ object.application_date|date:"d/m/Y" }}</span>
+      </div>
+      <div class="col-4">
+        <span class="hc-field-label">Lote :</span>
+        <span class="hc-field-val">{{ object.lot|default:"—" }}</span>
+      </div>
+      <div class="col-4">
+        <span class="hc-field-label">Revacunación :</span>
+        <span class="hc-field-val">{{ object.next_due_date|date:"d/m/Y"|default:"—" }}</span>
+      </div>
+      <div class="col-6">
+        <span class="hc-field-label">Aplicado por :</span>
+        <span class="hc-field-val">{{ object.applied_by.get_full_name|default:object.applied_by.username }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmación -->
+  <div class="px-3 py-3">
+    <div class="alert alert-danger d-flex align-items-center gap-2 mb-3" style="font-size:13px;">
+      <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+      <span>¿Confirmas que deseas <strong>eliminar</strong> este registro de vacunación? Esta acción no se puede deshacer.</span>
+    </div>
+    <form method="post" class="d-flex gap-2">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger btn-sm px-4">Sí, eliminar</button>
+      <a href="{% url 'medical:vaccination_list' %}" class="btn btn-outline-secondary btn-sm">Cancelar</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

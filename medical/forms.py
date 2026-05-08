@@ -2,7 +2,7 @@ import datetime
 from django import forms
 from django.forms import inlineformset_factory
 
-from .models import Consultation, VaccinationRecord, Prescription, PrescriptionItem, LabResult
+from .models import Consultation, VaccinationRecord, DewormingRecord, Prescription, PrescriptionItem, LabResult
 
 
 class ConsultationForm(forms.ModelForm):
@@ -71,6 +71,32 @@ class VaccinationRecordForm(forms.ModelForm):
         self.fields["lot"].required = False
         if not self.instance.pk:
             self.fields["application_date"].initial = datetime.date.today()
+
+
+class DewormingRecordForm(forms.ModelForm):
+    class Meta:
+        model = DewormingRecord
+        fields = ("patient", "dewormer", "date", "weight", "lot", "next_due_date", "applied_by")
+        widgets = {
+            "patient": forms.Select(attrs={"class": "form-select"}),
+            "dewormer": forms.Select(attrs={"class": "form-select"}),
+            "date": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+            "weight": forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+            "lot": forms.TextInput(attrs={"class": "form-control"}),
+            "next_due_date": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+            "applied_by": forms.Select(attrs={"class": "form-select"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        self.fields["applied_by"].queryset = User.objects.filter(is_active=True).order_by("first_name")
+        self.fields["weight"].required = False
+        self.fields["lot"].required = False
+        self.fields["next_due_date"].required = False
+        if not self.instance.pk:
+            self.fields["date"].initial = datetime.date.today()
 
 
 class PrescriptionForm(forms.ModelForm):

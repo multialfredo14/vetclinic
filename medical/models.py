@@ -165,6 +165,49 @@ class LabResult(models.Model):
         return f"{self.test_name} — {self.patient} ({self.date:%d/%m/%Y})"
 
 
+class Dewormer(models.Model):
+    TYPE_CHOICES = [
+        ("internal", "Interno"),
+        ("external", "Externo"),
+        ("both", "Ambos"),
+    ]
+    name = models.CharField(max_length=100, verbose_name="Nombre")
+    manufacturer = models.CharField(max_length=100, blank=True, verbose_name="Laboratorio")
+    type = models.CharField(max_length=10, choices=TYPE_CHOICES, default="internal", verbose_name="Tipo")
+
+    class Meta:
+        verbose_name = "Desparasitante (catálogo)"
+        verbose_name_plural = "Desparasitantes (catálogo)"
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class DewormingRecord(models.Model):
+    patient = models.ForeignKey(
+        "patients.Patient", on_delete=models.CASCADE,
+        related_name="dewormings", verbose_name="Paciente",
+    )
+    dewormer = models.ForeignKey(Dewormer, on_delete=models.PROTECT, verbose_name="Desparasitante")
+    date = models.DateField(verbose_name="Fecha")
+    weight = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, verbose_name="Peso (kg)")
+    lot = models.CharField(max_length=50, blank=True, verbose_name="Lote")
+    next_due_date = models.DateField(null=True, blank=True, verbose_name="Próx. dosis")
+    applied_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, verbose_name="Aplicado por",
+    )
+    history = HistoricalRecords()
+
+    class Meta:
+        verbose_name = "Registro de desparasitación"
+        verbose_name_plural = "Registros de desparasitación"
+        ordering = ["-date"]
+
+    def __str__(self):
+        return f"{self.dewormer} — {self.patient} ({self.date:%d/%m/%Y})"
+
+
 class VitalsHistory(models.Model):
     patient = models.ForeignKey(
         "patients.Patient", on_delete=models.CASCADE,

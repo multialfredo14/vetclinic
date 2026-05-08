@@ -6,15 +6,17 @@ from django.db.models import Q
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView, DetailView, ListView, UpdateView
+from django.http import HttpResponseRedirect
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from accounts.mixins import RoleRequiredMixin
 from inventory.models import Product, StockMovement
+from patients.models import Patient
 from .forms import (
-    ConsultationForm, VaccinationRecordForm,
+    ConsultationForm, VaccinationRecordForm, DewormingRecordForm,
     PrescriptionForm, PrescriptionItemFormSet, LabResultForm,
 )
-from .models import Consultation, VaccinationRecord, Prescription, LabResult
+from .models import Consultation, VaccinationRecord, DewormingRecord, Prescription, LabResult
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -179,15 +181,29 @@ class VaccinationCreateView(RoleRequiredMixin, CreateView):
         initial["applied_by"] = self.request.user
         return initial
 
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        # Deduct vaccine from inventory
+    def post(self, request, *args, **kwargs):
+        self.object = None
+        form = self.get_form()
+        dew_form = DewormingRecordForm(request.POST, prefix="dew")
+        has_dew = bool(request.POST.get("dew-dewormer") and request.POST.get("dew-date"))
+        if form.is_valid() and (not has_dew or dew_form.is_valid()):
+            return self._form_valid(form, dew_form if has_dew else None)
+        return self.form_invalid(form)
+
+    def _form_valid(self, form, dew_form):
+        self.object = form.save()
         _deduct_stock(
             self.object.vaccine.name, "vaccine", 1,
             self.request.user, self.object.pk, "vaccination",
         )
-        messages.success(self.request, f"Vacunación registrada para {self.object.patient}.")
-        return response
+        if dew_form:
+            dew = dew_form.save(commit=False)
+            dew.patient = self.object.patient
+            dew.save()
+            messages.success(self.request, f"Vacunación y desparasitación registradas para {self.object.patient}.")
+        else:
+            messages.success(self.request, f"Vacunación registrada para {self.object.patient}.")
+        return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
         next_url = self.request.GET.get("next")
@@ -198,7 +214,162 @@ class VaccinationCreateView(RoleRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["title"] = "Registrar vacunación"
+        ctx["dew_form"] = DewormingRecordForm(
+            prefix="dew",
+            initial={"applied_by": self.request.user},
+        )
+        patient_pk = self.request.GET.get("patient")
+        if patient_pk:
+            try:
+                ctx["selected_patient"] = Patient.objects.select_related(
+                    "owner", "species", "breed"
+                ).get(pk=patient_pk)
+            except Patient.DoesNotExist:
+                pass
         return ctx
+
+
+class VaccinationUpdateView(RoleRequiredMixin, UpdateView):
+    allowed_roles = ["Admin", "Veterinario", "Asistente Veterinario"]
+    required_permission = "medical.change_vaccinationrecord"
+    model = VaccinationRecord
+    form_class = VaccinationRecordForm
+    template_name = "medical/vaccination_form.html"
+
+    def get_success_url(self):
+        next_url = self.request.GET.get("next")
+        if next_url:
+            return next_url
+        return reverse("patients:patient_detail", kwargs={"pk": self.object.patient.pk})
+
+    def form_valid(self, form):
+        messages.success(self.request, f"Vacunación actualizada para {self.object.patient}.")
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["title"] = "Editar vacunación"
+        ctx["is_update"] = True
+        ctx["selected_patient"] = Patient.objects.select_related(
+            "owner", "species", "breed"
+        ).get(pk=self.object.patient_id)
+        return ctx
+
+
+class VaccinationDeleteView(RoleRequiredMixin, DeleteView):
+    allowed_roles = ["Admin", "Veterinario"]
+    required_permission = "medical.delete_vaccinationrecord"
+    model = VaccinationRecord
+    template_name = "medical/vaccination_confirm_delete.html"
+
+    def get_success_url(self):
+        return reverse("patients:patient_detail", kwargs={"pk": self.object.patient.pk})
+
+    def form_valid(self, form):
+        messages.success(self.request, "Vacunación eliminada.")
+        return super().form_valid(form)
+
+
+# ── Deworming ─────────────────────────────────────────────────────────────────
+
+def _get_selected_patient(request_or_pk):
+    try:
+        return Patient.objects.select_related("owner", "species", "breed").get(pk=request_or_pk)
+    except Patient.DoesNotExist:
+        return None
+
+
+class DewormingListView(LoginRequiredMixin, ListView):
+    model = DewormingRecord
+    template_name = "medical/deworming_list.html"
+    context_object_name = "dewormings"
+    paginate_by = 30
+
+    def get_queryset(self):
+        qs = DewormingRecord.objects.select_related("patient", "dewormer", "applied_by")
+        q = self.request.GET.get("q", "").strip()
+        if q:
+            qs = qs.filter(
+                Q(patient__name__icontains=q) | Q(dewormer__name__icontains=q)
+            )
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["query"] = self.request.GET.get("q", "")
+        ctx["today"] = datetime.date.today()
+        return ctx
+
+
+class DewormingCreateView(RoleRequiredMixin, CreateView):
+    allowed_roles = ["Admin", "Veterinario", "Asistente Veterinario"]
+    required_permission = "medical.add_dewormingrecord"
+    model = DewormingRecord
+    form_class = DewormingRecordForm
+    template_name = "medical/deworming_form.html"
+
+    def get_initial(self):
+        initial = super().get_initial()
+        initial["patient"] = self.request.GET.get("patient")
+        initial["applied_by"] = self.request.user
+        return initial
+
+    def form_valid(self, form):
+        messages.success(self.request, f"Desparasitación registrada para {form.instance.patient}.")
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        next_url = self.request.GET.get("next")
+        if next_url:
+            return next_url
+        return reverse("patients:patient_detail", kwargs={"pk": self.object.patient.pk})
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["title"] = "Registrar desparasitación"
+        patient_pk = self.request.GET.get("patient")
+        if patient_pk:
+            ctx["selected_patient"] = _get_selected_patient(patient_pk)
+        return ctx
+
+
+class DewormingUpdateView(RoleRequiredMixin, UpdateView):
+    allowed_roles = ["Admin", "Veterinario", "Asistente Veterinario"]
+    required_permission = "medical.change_dewormingrecord"
+    model = DewormingRecord
+    form_class = DewormingRecordForm
+    template_name = "medical/deworming_form.html"
+
+    def get_success_url(self):
+        next_url = self.request.GET.get("next")
+        if next_url:
+            return next_url
+        return reverse("patients:patient_detail", kwargs={"pk": self.object.patient.pk})
+
+    def form_valid(self, form):
+        messages.success(self.request, f"Desparasitación actualizada para {self.object.patient}.")
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["title"] = "Editar desparasitación"
+        ctx["is_update"] = True
+        ctx["selected_patient"] = _get_selected_patient(self.object.patient_id)
+        return ctx
+
+
+class DewormingDeleteView(RoleRequiredMixin, DeleteView):
+    allowed_roles = ["Admin", "Veterinario"]
+    required_permission = "medical.delete_dewormingrecord"
+    model = DewormingRecord
+    template_name = "medical/deworming_confirm_delete.html"
+
+    def get_success_url(self):
+        return reverse("patients:patient_detail", kwargs={"pk": self.object.patient.pk})
+
+    def form_valid(self, form):
+        messages.success(self.request, "Desparasitación eliminada.")
+        return super().form_valid(form)
 
 
 # ── Prescriptions ─────────────────────────────────────────────────────────────

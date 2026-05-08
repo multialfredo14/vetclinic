@@ -189,6 +189,25 @@ def breeds_by_species(request):
     return JsonResponse({"breeds": list(breeds)})
 
 
+@login_required
+def patient_json(request, pk):
+    patient = get_object_or_404(Patient.objects.select_related("owner", "species", "breed"), pk=pk)
+    return JsonResponse({
+        "name": patient.name,
+        "species": patient.species.name,
+        "breed": patient.breed.name if patient.breed else "",
+        "sex": patient.get_sex_display(),
+        "date_of_birth": patient.date_of_birth.strftime("%d/%m/%Y") if patient.date_of_birth else "",
+        "color": patient.color,
+        "microchip_id": patient.microchip_id or "",
+        "allergies": patient.allergies,
+        "owner_name": patient.owner.full_name,
+        "owner_phone": patient.owner.phone,
+        "owner_address": patient.owner.address,
+        "owner_email": patient.owner.email,
+    })
+
+
 # ── Client portal ─────────────────────────────────────────────────────────────
 
 @login_required
